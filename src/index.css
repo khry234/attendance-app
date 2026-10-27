@@ -1,0 +1,205 @@
+import { useMemo, useState } from 'react';
+
+const initialRooms = [
+  {
+    id: 'room-101',
+    name: 'Room 101',
+    color: '#4f46e5',
+    students: [
+      { id: 1, name: 'Ava Thompson', status: 'Present' },
+      { id: 2, name: 'Leo Martinez', status: 'Late' },
+      { id: 3, name: 'Mila Brown', status: 'Absent' },
+      { id: 4, name: 'Noah Davis', status: 'Present' },
+      { id: 5, name: 'Zoe Lee', status: 'Present' },
+      { id: 6, name: 'Ethan Clark', status: 'Absent' },
+    ],
+  },
+  {
+    id: 'room-102',
+    name: 'Room 102',
+    color: '#10b981',
+    students: [
+      { id: 7, name: 'Harper Scott', status: 'Present' },
+      { id: 8, name: 'Lucas Hall', status: 'Present' },
+      { id: 9, name: 'Ella Young', status: 'Late' },
+      { id: 10, name: 'Jack Adams', status: 'Absent' },
+      { id: 11, name: 'Grace Wilson', status: 'Present' },
+      { id: 12, name: 'Daniel King', status: 'Present' },
+    ],
+  },
+  {
+    id: 'room-103',
+    name: 'Room 103',
+    color: '#f59e0b',
+    students: [
+      { id: 13, name: 'Lily Perez', status: 'Present' },
+      { id: 14, name: 'Owen Harris', status: 'Present' },
+      { id: 15, name: 'Chloe White', status: 'Late' },
+      { id: 16, name: 'Nathan Allen', status: 'Present' },
+      { id: 17, name: 'Sofia Evans', status: 'Absent' },
+      { id: 18, name: 'James Baker', status: 'Present' },
+    ],
+  },
+];
+
+const statusColors = {
+  Present: '#10b981',
+  Late: '#f59e0b',
+  Absent: '#ef4444',
+};
+
+const statusOptions = ['Present', 'Late', 'Absent'];
+
+function App() {
+  const [rooms, setRooms] = useState(initialRooms);
+  const [selectedRoomId, setSelectedRoomId] = useState('room-101');
+
+  const selectedRoom = rooms.find((room) => room.id === selectedRoomId) ?? rooms[0];
+
+  const stats = useMemo(() => {
+    const total = selectedRoom.students.length;
+    const present = selectedRoom.students.filter((s) => s.status === 'Present').length;
+    const late = selectedRoom.students.filter((s) => s.status === 'Late').length;
+    const absent = selectedRoom.students.filter((s) => s.status === 'Absent').length;
+
+    return { total, present, late, absent };
+  }, [selectedRoom]);
+
+  const handleStatusChange = (studentId, newStatus) => {
+    setRooms((prevRooms) =>
+      prevRooms.map((room) => {
+        if (room.id !== selectedRoomId) return room;
+
+        return {
+          ...room,
+          students: room.students.map((student) =>
+            student.id === studentId ? { ...student, status: newStatus } : student
+          ),
+        };
+      })
+    );
+  };
+
+  return (
+    <div className="app-shell">
+      <header className="topbar">
+        <div className="brand-wrap">
+          <div className="brand-mark">A</div>
+          <div>
+            <p className="eyebrow">Student Portal</p>
+            <h1>Home</h1>
+          </div>
+        </div>
+
+        <nav className="top-actions">
+          <button className="nav-button active">Home</button>
+          <button className="nav-button">Schedule</button>
+          <button className="nav-button">Reports</button>
+        </nav>
+      </header>
+
+      <div className="content-layout">
+        <aside className="sidebar">
+          <div className="sidebar-header">
+            <span className="sidebar-title">Rooms</span>
+            <button className="new-room">+ New</button>
+          </div>
+
+          <ul className="room-list">
+            {rooms.map((room) => {
+              const roomPresent = room.students.filter((s) => s.status === 'Present').length;
+              const isActive = room.id === selectedRoomId;
+
+              return (
+                <li key={room.id}>
+                  <button
+                    className={`room-item ${isActive ? 'selected' : ''}`}
+                    onClick={() => setSelectedRoomId(room.id)}
+                  >
+                    <span className="room-dot" style={{ background: room.color }} />
+                    <div className="room-meta">
+                      <strong>{room.name}</strong>
+                      <small>{roomPresent}/{room.students.length} present</small>
+                    </div>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </aside>
+
+        <main className="main-panel">
+          <section className="summary-row">
+            <div className="summary-card">
+              <span>Total</span>
+              <strong>{stats.total}</strong>
+            </div>
+            <div className="summary-card success">
+              <span>Present</span>
+              <strong>{stats.present}</strong>
+            </div>
+            <div className="summary-card warning">
+              <span>Late</span>
+              <strong>{stats.late}</strong>
+            </div>
+            <div className="summary-card danger">
+              <span>Absent</span>
+              <strong>{stats.absent}</strong>
+            </div>
+          </section>
+
+          <section className="room-panel">
+            <div className="panel-head">
+              <div>
+                <p className="eyebrow">Current room</p>
+                <h2>{selectedRoom.name}</h2>
+              </div>
+              <button className="primary-button">Save attendance</button>
+            </div>
+
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Student</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {selectedRoom.students.map((student) => (
+                    <tr key={student.id}>
+                      <td className="student-name">{student.name}</td>
+                      <td>
+                        <span
+                          className="status-pill"
+                          style={{ background: `${statusColors[student.status]}20`, color: statusColors[student.status] }}
+                        >
+                          {student.status}
+                        </span>
+                      </td>
+                      <td>
+                        <select
+                          value={student.status}
+                          onChange={(e) => handleStatusChange(student.id, e.target.value)}
+                        >
+                          {statusOptions.map((status) => (
+                            <option key={status} value={status}>
+                              {status}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+  );
+}
+
+export default App;
