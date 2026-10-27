@@ -1,205 +1,452 @@
-import { useMemo, useState } from 'react';
-
-const initialRooms = [
-  {
-    id: 'room-101',
-    name: 'Room 101',
-    color: '#4f46e5',
-    students: [
-      { id: 1, name: 'Ava Thompson', status: 'Present' },
-      { id: 2, name: 'Leo Martinez', status: 'Late' },
-      { id: 3, name: 'Mila Brown', status: 'Absent' },
-      { id: 4, name: 'Noah Davis', status: 'Present' },
-      { id: 5, name: 'Zoe Lee', status: 'Present' },
-      { id: 6, name: 'Ethan Clark', status: 'Absent' },
-    ],
-  },
-  {
-    id: 'room-102',
-    name: 'Room 102',
-    color: '#10b981',
-    students: [
-      { id: 7, name: 'Harper Scott', status: 'Present' },
-      { id: 8, name: 'Lucas Hall', status: 'Present' },
-      { id: 9, name: 'Ella Young', status: 'Late' },
-      { id: 10, name: 'Jack Adams', status: 'Absent' },
-      { id: 11, name: 'Grace Wilson', status: 'Present' },
-      { id: 12, name: 'Daniel King', status: 'Present' },
-    ],
-  },
-  {
-    id: 'room-103',
-    name: 'Room 103',
-    color: '#f59e0b',
-    students: [
-      { id: 13, name: 'Lily Perez', status: 'Present' },
-      { id: 14, name: 'Owen Harris', status: 'Present' },
-      { id: 15, name: 'Chloe White', status: 'Late' },
-      { id: 16, name: 'Nathan Allen', status: 'Present' },
-      { id: 17, name: 'Sofia Evans', status: 'Absent' },
-      { id: 18, name: 'James Baker', status: 'Present' },
-    ],
-  },
-];
-
-const statusColors = {
-  Present: '#10b981',
-  Late: '#f59e0b',
-  Absent: '#ef4444',
-};
-
-const statusOptions = ['Present', 'Late', 'Absent'];
-
-function App() {
-  const [rooms, setRooms] = useState(initialRooms);
-  const [selectedRoomId, setSelectedRoomId] = useState('room-101');
-
-  const selectedRoom = rooms.find((room) => room.id === selectedRoomId) ?? rooms[0];
-
-  const stats = useMemo(() => {
-    const total = selectedRoom.students.length;
-    const present = selectedRoom.students.filter((s) => s.status === 'Present').length;
-    const late = selectedRoom.students.filter((s) => s.status === 'Late').length;
-    const absent = selectedRoom.students.filter((s) => s.status === 'Absent').length;
-
-    return { total, present, late, absent };
-  }, [selectedRoom]);
-
-  const handleStatusChange = (studentId, newStatus) => {
-    setRooms((prevRooms) =>
-      prevRooms.map((room) => {
-        if (room.id !== selectedRoomId) return room;
-
-        return {
-          ...room,
-          students: room.students.map((student) =>
-            student.id === studentId ? { ...student, status: newStatus } : student
-          ),
-        };
-      })
-    );
-  };
-
-  return (
-    <div className="app-shell">
-      <header className="topbar">
-        <div className="brand-wrap">
-          <div className="brand-mark">A</div>
-          <div>
-            <p className="eyebrow">Student Portal</p>
-            <h1>Home</h1>
-          </div>
-        </div>
-
-        <nav className="top-actions">
-          <button className="nav-button active">Home</button>
-          <button className="nav-button">Schedule</button>
-          <button className="nav-button">Reports</button>
-        </nav>
-      </header>
-
-      <div className="content-layout">
-        <aside className="sidebar">
-          <div className="sidebar-header">
-            <span className="sidebar-title">Rooms</span>
-            <button className="new-room">+ New</button>
-          </div>
-
-          <ul className="room-list">
-            {rooms.map((room) => {
-              const roomPresent = room.students.filter((s) => s.status === 'Present').length;
-              const isActive = room.id === selectedRoomId;
-
-              return (
-                <li key={room.id}>
-                  <button
-                    className={`room-item ${isActive ? 'selected' : ''}`}
-                    onClick={() => setSelectedRoomId(room.id)}
-                  >
-                    <span className="room-dot" style={{ background: room.color }} />
-                    <div className="room-meta">
-                      <strong>{room.name}</strong>
-                      <small>{roomPresent}/{room.students.length} present</small>
-                    </div>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </aside>
-
-        <main className="main-panel">
-          <section className="summary-row">
-            <div className="summary-card">
-              <span>Total</span>
-              <strong>{stats.total}</strong>
-            </div>
-            <div className="summary-card success">
-              <span>Present</span>
-              <strong>{stats.present}</strong>
-            </div>
-            <div className="summary-card warning">
-              <span>Late</span>
-              <strong>{stats.late}</strong>
-            </div>
-            <div className="summary-card danger">
-              <span>Absent</span>
-              <strong>{stats.absent}</strong>
-            </div>
-          </section>
-
-          <section className="room-panel">
-            <div className="panel-head">
-              <div>
-                <p className="eyebrow">Current room</p>
-                <h2>{selectedRoom.name}</h2>
-              </div>
-              <button className="primary-button">Save attendance</button>
-            </div>
-
-            <div className="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Student</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {selectedRoom.students.map((student) => (
-                    <tr key={student.id}>
-                      <td className="student-name">{student.name}</td>
-                      <td>
-                        <span
-                          className="status-pill"
-                          style={{ background: `${statusColors[student.status]}20`, color: statusColors[student.status] }}
-                        >
-                          {student.status}
-                        </span>
-                      </td>
-                      <td>
-                        <select
-                          value={student.status}
-                          onChange={(e) => handleStatusChange(student.id, e.target.value)}
-                        >
-                          {statusOptions.map((status) => (
-                            <option key={status} value={status}>
-                              {status}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        </main>
-      </div>
-    </div>
-  );
+:root {
+  font-family: Inter, 'Segoe UI', sans-serif;
+  color: #f5f7ff;
+  background: #0b1020;
+  line-height: 1.4;
+  font-weight: 500;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-export default App;
+* {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  margin: 0;
+  min-height: 100%;
+  height: 100%;
+}
+
+body {
+  background: linear-gradient(135deg, #101827 0%, #111827 35%, #0f172a 100%);
+}
+
+button, input, select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.discord-app {
+  display: flex;
+  min-height: 100vh;
+  background: #111827;
+  color: #e5e7eb;
+}
+
+.server-rail {
+  width: 86px;
+  background: #0f172a;
+  border-right: 1px solid rgba(148, 163, 184, 0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 18px 12px;
+  gap: 14px;
+}
+
+.server-badge {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  background: #232b3d;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  color: #f8fafc;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.server-badge.active {
+  background: linear-gradient(135deg, #5865f2, #7c80ff);
+  border-radius: 18px;
+}
+
+.server-badge.add {
+  background: #1f2937;
+  border: 1px dashed rgba(148, 163, 184, 0.6);
+  color: #a5b4fc;
+}
+
+.sidebar-panel {
+  width: 300px;
+  background: #1a2333;
+  border-right: 1px solid rgba(148, 163, 184, 0.12);
+  padding: 22px 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.sidebar-top {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.login-btn {
+  background: linear-gradient(135deg, #5865f2, #7c80ff);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.search-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: #cbd5e1;
+}
+
+.search-key {
+  opacity: 0.7;
+}
+
+.nav-menu,
+.footer-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.nav-item,
+.footer-item {
+  border: none;
+  background: transparent;
+  text-align: left;
+  color: #dbe3f0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  transition: 0.2s ease;
+}
+
+.nav-item:hover,
+.footer-item:hover {
+  background: rgba(148, 163, 184, 0.08);
+}
+
+.nav-item.selected {
+  background: rgba(88, 101, 242, 0.2);
+  color: white;
+  box-shadow: inset 0 0 0 1px rgba(88, 101, 242, 0.28);
+}
+
+.mini-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.section-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #94a3b8;
+  letter-spacing: 0.12em;
+  padding-left: 6px;
+}
+
+.streak-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.streak-card strong,
+.streak-card small {
+  display: block;
+}
+
+.streak-card small {
+  color: #94a3b8;
+}
+
+.streak-badge {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: rgba(245, 158, 11, 0.14);
+  color: #fbbf24;
+  font-size: 18px;
+}
+
+.footer-menu {
+  margin-top: auto;
+  padding-top: 18px;
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.main-panel {
+  flex: 1;
+  padding: 24px 28px 30px;
+  background: rgba(15, 23, 42, 0.5);
+}
+
+.main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 22px;
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: #8ea1d8;
+}
+
+.main-header h1,
+.tracker-head h2,
+.table-head h3 {
+  margin: 0;
+  color: white;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ghost-btn,
+.primary-btn,
+.new-room-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-weight: 600;
+}
+
+.ghost-btn {
+  background: rgba(148, 163, 184, 0.08);
+  color: #e2e8f0;
+}
+
+.primary-btn,
+.new-room-btn {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(150px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.metric-card {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 16px;
+  padding: 18px 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.metric-card span {
+  color: #94a3b8;
+  font-size: 0.8rem;
+}
+
+.metric-card strong {
+  font-size: 1.8rem;
+  color: white;
+}
+
+.metric-card.success strong {
+  color: #4ade80;
+}
+
+.metric-card.warn strong {
+  color: #fbbf24;
+}
+
+.metric-card.danger strong {
+  color: #f87171;
+}
+
+.room-tracker,
+.table-card {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 18px;
+  padding: 18px;
+}
+
+.tracker-head,
+.table-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.room-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.room-item {
+  flex: 1 1 200px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(31, 41, 55, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 12px;
+  padding: 12px 14px;
+  color: #e2e8f0;
+  text-align: left;
+}
+
+.room-item.active {
+  background: rgba(88, 101, 242, 0.15);
+  border-color: rgba(88, 101, 242, 0.4);
+}
+
+.room-color {
+  width: 12px;
+  height: 40px;
+  border-radius: 999px;
+}
+
+.room-item strong,
+.room-item small {
+  display: block;
+}
+
+.room-item small {
+  color: #94a3b8;
+}
+
+.table-card {
+  margin-top: 24px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 14px 12px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+th {
+  color: #94a3b8;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+}
+
+.student-name {
+  color: #f8fafc;
+  font-weight: 600;
+}
+
+.status-pill {
+  display: inline-flex;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+select {
+  background: rgba(15, 23, 42, 0.9);
+  color: #f8fafc;
+  border: 1px solid rgba(148, 163, 184, 0.15);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+
+@media (max-width: 980px) {
+  .discord-app {
+    flex-direction: column;
+  }
+
+  .server-rail {
+    width: 100%;
+    flex-direction: row;
+    justify-content: center;
+    border-right: none;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+  }
+
+  .sidebar-panel {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(140px, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .main-panel {
+    padding: 18px 14px 22px;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .main-header,
+  .tracker-head,
+  .table-head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  table,
+  thead,
+  tbody,
+  th,
+  td,
+  tr {
+    display: block;
+  }
+
+  thead {
+    display: none;
+  }
+
+  tr {
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+  }
+
+  td {
+    border: none;
+    padding: 6px 0;
+  }
+}
